@@ -15,7 +15,7 @@ You need to create the following relationships:
 
 Start by creating the models and migrations for the following database tables:
 
-![domain.png](https://moringa.instructure.com/courses/498/files/325552/preview)
+![image info](domain.png)
 
 ### Validations
 Add validations to the RestaurantPizza model:
