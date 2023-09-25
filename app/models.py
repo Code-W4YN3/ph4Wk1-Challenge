@@ -9,20 +9,25 @@ db = SQLAlchemy()
 class Restaurant(db.Model, SerializerMixin):
     __tablename__ = 'restaurants'
 
+    serialize_rules = ('-pizzas.restaurants',)
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
     address = db.Column(db.String)
 
-    pizzas = db.relationship('Pizza', secondary='restaurant_pizzas')
+    pizzas = db.relationship(
+        "Pizza", secondary = "restaurant_pizzas" , back_populates = "restaurants"    
+    )
 
     @validates('name')
     def validates_name(self, key, name):
         if(len(name) >= 50):
             raise ValueError("Restaurant name cannot exceed 50 characters")
-        return name
+        else:
+            return name
     
     def __repr__(self):
-        return f'<Restaurant {self.name} | Address: {self.address}>'
+        return f'<Restaurant {self.name}>'
     
 
 class Pizza(db.Model, SerializerMixin):
@@ -34,10 +39,12 @@ class Pizza(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    restaurants= db.relationship('Restaurant', secondary='restaurant_pizzas')
+    restaurants = db.relationship(
+        "Restaurant", secondary = "restaurant_pizzas" , back_populates="pizzas"
+    ) 
 
     def __repr__(self):
-        return f'<Pizza {self.name} | Ingredients: {self.ingredients}>'
+        return f'<Pizza {self.name}>'
     
 
 class Restaurant_pizza(db.Model, SerializerMixin):
@@ -50,14 +57,8 @@ class Restaurant_pizza(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    pizza = db.relationship(Pizza, backref=db.backref("restaurant_pizzas", cascade="all, delete-orphan"))
-    restaurant = db.relationship(Restaurant, backref=db.backref("restaurant_pizzas", cascade="all, delete-orphan"))
-
     @validates('price')
     def validates_price(self, key, price):
-        if(price not in range(1,31)):
+        if not(price >= 1 and price <=30):
             raise ValueError("Price can only range from 1 to 30")
         return price
-
-    def __repr__(self):
-        return f'<Pizza {self.name} | Ingredients: {self.ingredients}>'

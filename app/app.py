@@ -23,31 +23,32 @@ def index():
 class Restaurants(Resource):
 
     def get(self):
-        restaurants = [rest.to_dict() for rest in Restaurant.query.all()]
-        return make_response(jsonify(restaurants), 200)
+        restaurants_dict = [rest.to_dict() for rest in Restaurant.query.all()]
+        return make_response(jsonify(restaurants_dict), 200)
 
 api.add_resource(Restaurants, '/restaurants')
 
 class RestaurantsID(Resource):
 
     def get(self, id):
-        restaurantsID = [Restaurant.query.filter_by(id = id).first().to_dict()]
-        return make_response(jsonify(restaurantsID), 200)
+        restaurant = Restaurant.query.filter_by(id=id).first()
+        restaurant_dict =restaurant.to_dict()
+        return make_response(jsonify(restaurant_dict), 200)
     
     def delete(self, id):
         restaurant = Restaurant.query.filter_by(id=id).first()
-        restaurant_pizzas = Restaurant_pizza.query.filter_by(restaurant_id = id).all()
+        if restaurant:
+            db.session.delete(restaurant)
+            db.session.commit()
 
-        db.session.delete(restaurant_pizzas)
-        db.session.delete(restaurant)
-        db.session.commit()
-
-        response = make_response(
-            " ",
-            200
-        )
-
-        return response
+            response = {
+                
+            }
+            return make_response(jsonify(response),204)
+        
+        else:
+            response = { "error": "restaurant you are trying to delete DOES NOT EXIST" }
+            return make_response(response,404)
 
 api.add_resource(RestaurantsID, '/restaurants/<int:id>')
 
@@ -68,15 +69,20 @@ class Restaurant_pizzas(Resource):
     def post(self):
         
         new_rest_pizza = Restaurant_pizza(
-            price = request.form['name'],
-            pizza_id = request.form['pizza_id'],
-            restaurant_id = request.form['restaurant_id'],
+            price = request.form.get['name'],
+            pizza_id = request.form.get['pizza_id'],
+            restaurant_id = request.form.get['restaurant_id'],
         )
 
         db.session.add(new_rest_pizza)
         db.session.commit()
 
-        return make_response(new_rest_pizza.to_dict(), 201)
+        rp_dict = new_rest_pizza.to_dict()
+        if rp_dict:
+            return make_response(rp_dict,201)
+        else:
+            response ={"errors": ["validation errors"] }
+            return make_response(new_rest_pizza, 404)
 
 api.add_resource(Restaurant_pizzas, '/restaurant_pizzas')
 
